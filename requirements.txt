@@ -1,0 +1,4 @@
+pandas
+python-binance
+alive-progress
+matplotlib
