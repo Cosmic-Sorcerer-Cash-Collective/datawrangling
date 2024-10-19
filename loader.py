@@ -14,8 +14,10 @@ def load_data(filename: str) -> pd.DataFrame:
     :return: DataFrame containing the candlestick data
     """
     df = pd.read_csv(filename)
-    df['Open Time'] = pd.to_datetime(df['Open Time'])
-    df['Close Time'] = pd.to_datetime(df['Close Time'])
+    # make sure the columns containing 'time' are converted into a pandas datetime
+    for col in df.columns:
+        if 'time' in col or 'Time' in col:
+            df[col] = pd.to_datetime(df[col])
     return df
 
 
@@ -44,7 +46,7 @@ def read_csv_header(file_path: str) -> set:
         return None
 
 
-def is_valid_csv(file_path: str, headers: set = None) -> bool:
+def is_valid_csv(file_path: str, headers: set = REQUIRED_HEADERS) -> bool:
     """
     Checks if the CSV file has the required headers.
 
@@ -52,8 +54,6 @@ def is_valid_csv(file_path: str, headers: set = None) -> bool:
     :param headers: Set of required headers (default is REQUIRED_HEADERS)
     :return: True if the CSV file has all the required headers, False otherwise
     """
-    if headers is None:
-        headers = REQUIRED_HEADERS
     header = read_csv_header(file_path)
     if header is None:
         return False  # Skip files with errors
@@ -62,7 +62,7 @@ def is_valid_csv(file_path: str, headers: set = None) -> bool:
 
 def display_csv_files(csv_files: list):
     """
-    Displays the list of valid CSV files with numbering.
+    Displays the list of CSV files with numbering.
 
     :param csv_files: List of CSV files to display
     :return: None
@@ -71,7 +71,7 @@ def display_csv_files(csv_files: list):
     if not csv_files:
         raise ValueError("No files to display.")
     else:
-        print("Valid CSV files in the current directory:")
+        print("CSV files in the current directory:")
         for idx, file in enumerate(csv_files, start=1):
             print(f"{idx}. {file}")
 
@@ -100,21 +100,22 @@ def get_user_choice(csv_files: list) -> str:
             print("Invalid input. Please enter a number.")
 
 
-def prompt_file_choice(headers: set = None) -> str:
+def prompt_file_choice(headers: set = REQUIRED_HEADERS) -> str:
     """Prompts the user to select a valid CSV file from the current directory. Will select the files based on the headers provided.
 
-    :param headers (set): The set of headers that the CSV file must contain.
+    :param headers (set): The set of headers that the CSV file must contain. Default is REQUIRED_HEADERS, pass None to skip header check.
 
     :return str: The selected CSV file name.
     """
+    csv_files = list_csv_files()
     if headers is None:
-        headers = REQUIRED_HEADERS
-    csv_files = list_csv_files()  # Step 1: Scan directory for CSV files
-    valid_csv_files = [file for file in csv_files if is_valid_csv(file, headers)]  # Step 2: Filter valid CSVs
+        valid_csv_files = csv_files
+    else:
+        valid_csv_files = [file for file in csv_files if is_valid_csv(file, headers)]
     if valid_csv_files:
-        display_csv_files(valid_csv_files)  # Step 3: Display valid CSV files
+        display_csv_files(valid_csv_files)
         try:
-            selected_file = get_user_choice(valid_csv_files)  # Step 4: Let user select a valid file
+            selected_file = get_user_choice(valid_csv_files)
         except ValueError as e:
             print(e)
             return None

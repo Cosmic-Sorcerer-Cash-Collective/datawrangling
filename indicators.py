@@ -125,25 +125,28 @@ def macd_scaler(df: pd.DataFrame):
     res['MACD_Value'] = (res['MACD'] / res['Close']) * 100 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     res['MACD_Signal'] = (res['Signal'] / res['Close']) * 100 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     res['MACD_Histogram'] = (res['Histogram'] / res['Close']) * 100 ## !!!!!!!!!!!!!!!!!!!!!!!
-    res.drop(columns=['Close'], inplace=True)
+    res.drop(columns=['Close', 'MACD', 'Signal', 'Histogram'], inplace=True)
     return res
 
 
-def combine_indicators(dfList: list):
+def combine_indicators(dfList: list, align: str = 'Open Time'):
     """
     Combine multiple indicator DataFrames into a single DataFrame. Aligns the DataFrames on the 'Open Time' column.
 
     :param dfList: List of DataFrames to combine
+    :param align: Columns on which to align the DataFrames
     :return: DataFrame containing all indicator values
     """
     res = dfList[0]
     for df in dfList[1:]:
-        res = pd.merge(res, df, on='Open Time')
+        res = pd.merge(res, df, on=align)
     return res
 
 
 def main():
     filename = loader.prompt_file_choice()
+    if filename is None:
+        return
     pair = filename.split("_")[0]
     df = loader.load_data(filename)
 
@@ -151,7 +154,7 @@ def main():
     print("RSI computed successfully.")
     rsi.dropna(inplace=True)
 
-    adx = compute_adx(df, periods=[14])
+    adx = compute_adx(df, periods=[7, 14, 21])
     print("ADX computed successfully.")
     adx.dropna(inplace=True)
 
