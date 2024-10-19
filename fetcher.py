@@ -1,8 +1,7 @@
-import csv
 import pandas as pd
 from binance.client import Client
 from datetime import datetime
-import time
+from alive_progress import alive_bar
 
 client = Client()
 
@@ -47,7 +46,8 @@ def main():
     symbol = input("Enter symbol (e.g., BTCUSDT): ")
     interval = input("Enter interval (e.g., 5m, 1h, 1d): ")
     start_date = input("Enter start date (e.g., 1 Jan 2022): ")
-    df = get_binance_klines(symbol, interval, start_date)
+    with alive_bar(monitor=None, stats=None, title="Fetching..."):
+        df = get_binance_klines(symbol, interval, start_date)
     save_to_csv(df, symbol, interval)
 
 if __name__ == "__main__":
